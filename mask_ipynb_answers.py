@@ -30,8 +30,10 @@ code_before
 x, y = ... # To complete.
 code_after
 ----------------
-
 """
+
+__author__ = "Mirko Bronzi - mirko.bronzi@mila.quebec"
+
 import argparse
 import re
 
