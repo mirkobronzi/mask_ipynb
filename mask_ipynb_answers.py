@@ -1,3 +1,37 @@
+"""
+Quick script to generate the to_complete and the solution version for a ipynb.
+It expected the source file to have tags to mark the code that should be masked in the
+to_complete version.
+
+----------------
+E.g., to mask a block of code
+
+code_before
+# __START_BLOCK_ANSWER__
+lot of stuff
+and more stuff
+# __END_BLOCK_ANSWER__
+code_after
+
+becomes:
+code_before
+... # To complete.
+code_after
+----------------
+E.g., to mask just after an equal symbol:
+
+code_before
+# __NEXT_LINE_ANSWER__
+x, y = my_function(a, b, c)
+code_after
+
+becomes:
+code_before
+x, y = ... # To complete.
+code_after
+----------------
+
+"""
 import argparse
 import re
 
@@ -56,7 +90,7 @@ def mask_ipynb(in_stream, to_complete_stream, solution_stream):
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(__doc__)
     parser.add_argument('--input_file', help='path to input ipynb (source)',
                         required=True)
     parser.add_argument('--to_complete_file', help='path to output ipynb (to complete)',
