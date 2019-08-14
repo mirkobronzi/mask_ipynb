@@ -111,6 +111,5 @@ def main():
                 mask_ipynb(in_stream, to_complete_stream, solution_stream)
 
 
-
 if __name__ == '__main__':
     main()
