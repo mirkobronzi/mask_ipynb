@@ -1,5 +1,7 @@
 # Info
 
+**WARNING**: if using Colab, use "Download as ipynb". Do **not** download from gdrive directly.
+
 This script can be used to prepare ipynb files to be used for tutorials.
 I.e., the idea is that a tutorial has 2 versions: the one with the solution,
 and the one with the questions.

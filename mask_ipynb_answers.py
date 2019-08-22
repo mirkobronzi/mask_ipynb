@@ -46,12 +46,14 @@ SPACES_AT_LINE_START = re.compile('" *')
 REPLACEMENT_TEXT = '... # To complete.'
 
 
-def mask_ipynb(in_stream, to_complete_stream, solution_stream):
+def mask_ipynb(in_stream, to_complete_stream, solution_stream, debug=False):
     in_answer_block = False
     next_line_answer = False
     blocks = 0
     one_line = 0
     for line in in_stream:
+        if debug:
+            print('line: {}'.format(line))
         if RE_START_BLOCK.match(line):
             if in_answer_block:
                 raise ValueError('start answer block once already inside an'
@@ -99,6 +101,7 @@ def main():
                         required=True)
     parser.add_argument('--solution_file', help='path to output ipynb (solution)',
                         required=True)
+    parser.add_argument('--debug', help='more verbose', action='store_true')
     args = parser.parse_args()
 
     print('masking file {} - writing output (to complete) into {} - writing'
@@ -108,7 +111,7 @@ def main():
     with open(args.input_file, 'r', encoding='utf8') as in_stream:
         with open(args.to_complete_file, 'w', encoding='utf8') as to_complete_stream:
             with open(args.solution_file, 'w', encoding='utf8') as solution_stream:
-                mask_ipynb(in_stream, to_complete_stream, solution_stream)
+                mask_ipynb(in_stream, to_complete_stream, solution_stream, debug=args.debug)
 
 
 if __name__ == '__main__':
