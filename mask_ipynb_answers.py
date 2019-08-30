@@ -39,6 +39,8 @@ import re
 
 RE_START_BLOCK = re.compile('.*".*# *__START_BLOCK_ANSWER__.*".*')
 RE_END_BLOCK = re.compile('.*".*# *__END_BLOCK_ANSWER__.*".*')
+RE_START_OUT_CODE_BLOCK = re.compile('.*__START_OUT_OF_CODE_ANSWER__.*')
+RE_END_OUT_OF_CODE_BLOCK = re.compile('.*__END_OUT_OF_CODE_ANSWER__.*')
 RE_NEXT_LINE = re.compile('.*".*# *__NEXT_LINE_ANSWER__.*".*')
 BEFORE_EQUAL = re.compile('^.* = ')
 NEW_LINE_IN_LINE_ENDING = re.compile('.*",\n$')
@@ -48,8 +50,10 @@ REPLACEMENT_TEXT = '... # To complete.'
 
 def mask_ipynb(in_stream, to_complete_stream, solution_stream, debug=False):
     in_answer_block = False
+    in_out_of_code_answer_block = False
     next_line_answer = False
     blocks = 0
+    out_of_code_blocks = 0
     one_line = 0
     for line in in_stream:
         if debug:
@@ -67,6 +71,18 @@ def mask_ipynb(in_stream, to_complete_stream, solution_stream, debug=False):
                                  ' answer block')
             in_answer_block = False
             blocks += 1
+        elif RE_START_OUT_CODE_BLOCK.match(line):
+            if in_out_of_code_answer_block:
+                raise ValueError('start answer block once already inside an'
+                                 ' answer block')
+            in_out_of_code_answer_block = True
+        elif RE_END_OUT_OF_CODE_BLOCK.match(line):
+            if not in_out_of_code_answer_block:
+                raise ValueError('end answer block when not inside an'
+                                 ' answer block')
+            in_out_of_code_answer_block = False
+            out_of_code_blocks += 1
+
         elif RE_NEXT_LINE.match(line):
             next_line_answer = True
         elif next_line_answer:
@@ -83,14 +99,16 @@ def mask_ipynb(in_stream, to_complete_stream, solution_stream, debug=False):
             solution_stream.write(line)
             one_line += 1
             next_line_answer = False
-        elif in_answer_block:  # just skip this line for the to_complete
+        elif in_answer_block or in_out_of_code_answer_block:
+            # just skip this line for the to_complete - write it only on the solution stream
             solution_stream.write(line)
         else:
             to_complete_stream.write(line)
             solution_stream.write(line)
     if in_answer_block:
         raise ValueError('completed without closing the answer block')
-    print('substituted {} blocks - and {} lines'.format(blocks, one_line))
+    print('substituted {} blocks - {} out of code blocks - and {} lines'.format(
+        blocks, out_of_code_blocks, one_line))
 
 
 def main():
