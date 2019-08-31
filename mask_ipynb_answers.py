@@ -123,7 +123,7 @@ def main():
     args = parser.parse_args()
 
     print('masking file {} - writing output (to complete) into {} - writing'
-          'output (solution) into {}'.format(
+          ' output (solution) into {}'.format(
         args.input_file, args.to_complete_file, args.solution_file))
 
     with open(args.input_file, 'r', encoding='utf8') as in_stream:
