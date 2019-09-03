@@ -119,19 +119,25 @@ def parse_markdown_source(source):
 def parse_cells(cells):
     solution_cells = []
     to_complete_cells = []
+    tot_code_blocks = 0
+    tot_markdown_blocks = 0
     for cell in cells:
         if isinstance(cell, dict) and cell['cell_type'] == 'code' and 'source' in cell:
-            solution, to_complete, blocks = parse_code_source(cell['source'])
+            solution, to_complete, code_blocks = parse_code_source(cell['source'])
+            tot_code_blocks += code_blocks
             cell_to_complete = copy.deepcopy(cell)
             cell['source'] = solution
             cell_to_complete['source'] = to_complete
         elif isinstance(cell, dict) and cell['cell_type'] == 'markdown' and 'source' in cell:
-            solution, to_complete, blocks  = parse_markdown_source(cell['source'])
+            solution, to_complete, markdown_blocks = parse_markdown_source(cell['source'])
+            tot_markdown_blocks += markdown_blocks
             cell_to_complete = copy.deepcopy(cell)
             cell['source'] = solution
             cell_to_complete['source'] = to_complete
         solution_cells.append(cell)
         to_complete_cells.append(cell_to_complete)
+    print('substituted {} code blocks and {} mardown blocks.'.format(
+        tot_code_blocks, tot_markdown_blocks))
     return solution_cells, to_complete_cells
 
 
@@ -143,85 +149,6 @@ def mask_ipynb(in_stream, to_complete_stream, solution_stream, debug=False):
     json.dump(parsed_json, solution_stream, indent=2)
     parsed_json['cells'] = to_complete_cells
     json.dump(parsed_json, to_complete_stream, indent=2)
-
-
-    # in_answer_block = False
-    # in_out_of_code_answer_block = False
-    # next_line_answer = False
-    # prev_line_ends_with_comma = False
-    # blocks = 0
-    # out_of_code_blocks = 0
-    # one_line = 0
-    # new_lines_added = 0
-    # for line in in_stream:
-    #     if debug:
-    #         print('line: {}'.format(line))
-    #     if RE_START_BLOCK.match(line):
-    #         if in_answer_block:
-    #             raise ValueError('start answer block once already inside an'
-    #                              ' answer block')
-    #         in_answer_block = True
-    #         spaces = SPACES_AT_LINE_START.findall(line)
-    #         to_complete_stream.write('    ' + spaces[0] + REPLACEMENT_TEXT + '\\n",\n')
-    #     elif RE_END_BLOCK.match(line):
-    #         if not in_answer_block:
-    #             raise ValueError('end answer block when not inside an'
-    #                              ' answer block')
-    #         if prev_line_ends_with_comma:  # this will break the json list - need to add a newline
-    #             solution_stream.write('"\\n"\n')
-    #             to_complete_stream.write('"\\n"\n')
-    #             new_lines_added += 1
-    #         in_answer_block = False
-    #         blocks += 1
-    #
-    #     elif RE_START_OUT_CODE_BLOCK.match(line):
-    #         if in_out_of_code_answer_block:
-    #             raise ValueError('start answer block once already inside an'
-    #                              ' answer block')
-    #         in_out_of_code_answer_block = True
-    #     elif RE_END_OUT_OF_CODE_BLOCK.match(line):
-    #         if not in_out_of_code_answer_block:
-    #             raise ValueError('end answer block when not inside an'
-    #                              ' answer block')
-    #
-    #         if prev_line_ends_with_comma:  # this will break the json list - need to add a newline
-    #             solution_stream.write('"\\n"\n')
-    #             new_lines_added += 1
-    #         in_out_of_code_answer_block = False
-    #         out_of_code_blocks += 1
-    #
-    #     elif RE_NEXT_LINE.match(line):
-    #         next_line_answer = True
-    #     elif next_line_answer:
-    #         part_to_keep = BEFORE_EQUAL.findall(line)
-    #         if len(part_to_keep) != 1:
-    #             raise ValueError(
-    #                 'expecting a one line answer format (i.e., .. = ...\n'
-    #                 'instead I found the next line:\n{}'.format(line))
-    #         if NEW_LINE_IN_LINE_ENDING.match(line):
-    #             ending = '\\n",'
-    #         else:
-    #             ending = '"'
-    #         to_complete_stream.write(part_to_keep[0] + REPLACEMENT_TEXT + ending + '\n')
-    #         solution_stream.write(line)
-    #         one_line += 1
-    #         next_line_answer = False
-    #     elif in_answer_block or in_out_of_code_answer_block:
-    #         # just skip this line for the to_complete - write it only on the solution stream
-    #         solution_stream.write(line)
-    #     else:
-    #         to_complete_stream.write(line)
-    #         solution_stream.write(line)
-    #
-    #     if line.strip().endswith(','):
-    #         prev_line_ends_with_comma = True
-    #     else:
-    #         prev_line_ends_with_comma = False
-    #
-    # if in_answer_block:
-    #     raise ValueError('completed without closing the answer block')
-    # print('substituted {} blocks - {} out of code blocks - and {} lines - added {}'
-    #       ' newlines.'.format(blocks, out_of_code_blocks, one_line, new_lines_added))
 
 
 def main():
