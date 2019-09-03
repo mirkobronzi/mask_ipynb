@@ -52,9 +52,11 @@ def mask_ipynb(in_stream, to_complete_stream, solution_stream, debug=False):
     in_answer_block = False
     in_out_of_code_answer_block = False
     next_line_answer = False
+    prev_line_ends_with_comma = False
     blocks = 0
     out_of_code_blocks = 0
     one_line = 0
+    new_lines_added = 0
     for line in in_stream:
         if debug:
             print('line: {}'.format(line))
@@ -71,6 +73,7 @@ def mask_ipynb(in_stream, to_complete_stream, solution_stream, debug=False):
                                  ' answer block')
             in_answer_block = False
             blocks += 1
+
         elif RE_START_OUT_CODE_BLOCK.match(line):
             if in_out_of_code_answer_block:
                 raise ValueError('start answer block once already inside an'
@@ -80,6 +83,10 @@ def mask_ipynb(in_stream, to_complete_stream, solution_stream, debug=False):
             if not in_out_of_code_answer_block:
                 raise ValueError('end answer block when not inside an'
                                  ' answer block')
+
+            if prev_line_ends_with_comma:  # this will break the json list - need to add a newline
+                solution_stream.write('"\\n"\n')
+                new_lines_added += 1
             in_out_of_code_answer_block = False
             out_of_code_blocks += 1
 
@@ -105,10 +112,16 @@ def mask_ipynb(in_stream, to_complete_stream, solution_stream, debug=False):
         else:
             to_complete_stream.write(line)
             solution_stream.write(line)
+
+        if line.strip().endswith(','):
+            prev_line_ends_with_comma = True
+        else:
+            prev_line_ends_with_comma = False
+
     if in_answer_block:
         raise ValueError('completed without closing the answer block')
-    print('substituted {} blocks - {} out of code blocks - and {} lines'.format(
-        blocks, out_of_code_blocks, one_line))
+    print('substituted {} blocks - {} out of code blocks - and {} lines - added {}'
+          ' newlines.'.format(blocks, out_of_code_blocks, one_line, new_lines_added))
 
 
 def main():
