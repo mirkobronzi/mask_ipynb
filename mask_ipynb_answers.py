@@ -46,7 +46,7 @@ RE_END_OUT_OF_CODE_BLOCK = re.compile('.*__END_OUT_OF_CODE_ANSWER__.*')
 RE_NEXT_LINE = re.compile('.*__NEXT_LINE_ANSWER__.*')
 BEFORE_EQUAL = re.compile('^.* = ')
 NEW_LINE_IN_LINE_ENDING = re.compile('.*",\n$')
-SPACES_AT_LINE_START = re.compile('" *')
+SPACES_AT_LINE_START = re.compile(' *')
 REPLACEMENT_TEXT = '... # To complete.'
 
 
@@ -59,7 +59,12 @@ def parse_code_source(source):
     for code_line in source:
         if RE_START_BLOCK.match(code_line):
             in_answer_block = True
-            result_to_complete.append(REPLACEMENT_TEXT)
+            spaces_reg = SPACES_AT_LINE_START.findall(code_line)
+            if len(spaces_reg) > 0:
+                spaces = spaces_reg[0]
+            else:
+                spaces = ""
+            result_to_complete.append(spaces + REPLACEMENT_TEXT)
         elif RE_END_BLOCK.match(code_line):
             in_answer_block = False
             blocks += 1
@@ -90,7 +95,25 @@ def parse_code_source(source):
 
 
 def parse_markdown_source(source):
-    return None, None, 0
+    in_answer_block = False
+    blocks = 0
+    result_solution = []
+    result_to_complete = []
+    for code_line in source:
+        if RE_START_OUT_CODE_BLOCK.match(code_line):
+            in_answer_block = True
+            result_to_complete.append(REPLACEMENT_TEXT)
+        elif RE_END_OUT_OF_CODE_BLOCK.match(code_line):
+            in_answer_block = False
+            blocks += 1
+        elif in_answer_block:
+            result_solution.append(code_line)
+        else:
+            result_solution.append(code_line)
+            result_to_complete.append(code_line)
+    if in_answer_block:
+        raise ValueError('completed source code without closing a masking block')
+    return result_solution, result_to_complete, blocks
 
 
 def parse_cells(cells):
