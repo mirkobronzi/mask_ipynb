@@ -71,6 +71,10 @@ def mask_ipynb(in_stream, to_complete_stream, solution_stream, debug=False):
             if not in_answer_block:
                 raise ValueError('end answer block when not inside an'
                                  ' answer block')
+            if prev_line_ends_with_comma:  # this will break the json list - need to add a newline
+                solution_stream.write('"\\n"\n')
+                to_complete_stream.write('"\\n"\n')
+                new_lines_added += 1
             in_answer_block = False
             blocks += 1
 
