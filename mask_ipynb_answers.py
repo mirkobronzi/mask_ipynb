@@ -45,7 +45,6 @@ RE_START_OUT_CODE_BLOCK = re.compile('.*__START_OUT_OF_CODE_ANSWER__.*')
 RE_END_OUT_OF_CODE_BLOCK = re.compile('.*__END_OUT_OF_CODE_ANSWER__.*')
 RE_NEXT_LINE = re.compile('.*__NEXT_LINE_ANSWER__.*')
 BEFORE_EQUAL = re.compile('^.* = ')
-NEW_LINE_IN_LINE_ENDING = re.compile('.*",\n$')
 SPACES_AT_LINE_START = re.compile(' *')
 REPLACEMENT_TEXT = '... # To complete.'
 
@@ -80,11 +79,7 @@ def parse_code_source(source):
                 raise ValueError(
                     'expecting a one line answer format (i.e., .. = ...\n'
                     'instead I found the next line:\n{}'.format(code_line))
-            if NEW_LINE_IN_LINE_ENDING.match(code_line):
-                ending = '\\n",'
-            else:
-                ending = '"'
-            result_to_complete.append(part_to_keep[0] + REPLACEMENT_TEXT + ending + '\n')
+            result_to_complete.append(part_to_keep[0] + REPLACEMENT_TEXT)
             result_solution.append(code_line)
         else:
             result_solution.append(code_line)
@@ -134,6 +129,8 @@ def parse_cells(cells):
             cell_to_complete = copy.deepcopy(cell)
             cell['source'] = solution
             cell_to_complete['source'] = to_complete
+        else:
+            raise ValueError('found a cell that I do not know how to parse:\n\n{}'.format(cell))
         solution_cells.append(cell)
         to_complete_cells.append(cell_to_complete)
     print('substituted {} code blocks and {} mardown blocks.'.format(
@@ -141,14 +138,14 @@ def parse_cells(cells):
     return solution_cells, to_complete_cells
 
 
-def mask_ipynb(in_stream, to_complete_stream, solution_stream, debug=False):
+def mask_ipynb(in_stream, to_complete_stream, solution_stream):
     parsed_json = json.loads(in_stream.read())
 
     solution_cells, to_complete_cells = parse_cells(parsed_json['cells'])
     parsed_json['cells'] = solution_cells
-    json.dump(parsed_json, solution_stream, indent=2)
+    json.dump(parsed_json, solution_stream, ensure_ascii=False, indent=2)
     parsed_json['cells'] = to_complete_cells
-    json.dump(parsed_json, to_complete_stream, indent=2)
+    json.dump(parsed_json, to_complete_stream, ensure_ascii=False, indent=2)
 
 
 def main():
