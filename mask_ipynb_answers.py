@@ -166,7 +166,7 @@ def main():
     with open(args.input_file, 'r', encoding='utf8') as in_stream:
         with open(args.to_complete_file, 'w', encoding='utf8') as to_complete_stream:
             with open(args.solution_file, 'w', encoding='utf8') as solution_stream:
-                mask_ipynb(in_stream, to_complete_stream, solution_stream, debug=args.debug)
+                mask_ipynb(in_stream, to_complete_stream, solution_stream)
 
 
 if __name__ == '__main__':
