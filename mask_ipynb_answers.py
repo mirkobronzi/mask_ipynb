@@ -79,7 +79,7 @@ def parse_code_source(source):
                 raise ValueError(
                     'expecting a one line answer format (i.e., .. = ...\n'
                     'instead I found the next line:\n{}'.format(code_line))
-            result_to_complete.append(part_to_keep[0] + REPLACEMENT_TEXT)
+            result_to_complete.append(part_to_keep[0] + REPLACEMENT_TEXT + '\n')
             result_solution.append(code_line)
         else:
             result_solution.append(code_line)
