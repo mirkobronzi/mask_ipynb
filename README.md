@@ -50,3 +50,17 @@ becomes:
     code_before
     x, y = ... # To complete.
     code_after
+
+----
+
+Or to mask something in a markdown cell:
+
+    my test here...
+    __START_OUT_OF_CODE_ANSWER__
+    this part will be masked.
+    __END_OUT_OF_CODE_ANSWER__
+
+becomes:
+
+    my test here...
+    
