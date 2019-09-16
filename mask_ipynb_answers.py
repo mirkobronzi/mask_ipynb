@@ -46,7 +46,7 @@ RE_END_OUT_OF_CODE_BLOCK = re.compile('.*__END_OUT_OF_CODE_ANSWER__.*')
 RE_NEXT_LINE = re.compile('.*__NEXT_LINE_ANSWER__.*')
 BEFORE_EQUAL = re.compile('^.* = ')
 SPACES_AT_LINE_START = re.compile(' *')
-REPLACEMENT_TEXT = '... # To complete.'
+REPLACEMENT_TEXT = '... # To complete.\n'
 
 
 def parse_code_source(source):
@@ -79,7 +79,7 @@ def parse_code_source(source):
                 raise ValueError(
                     'expecting a one line answer format (i.e., .. = ...\n'
                     'instead I found the next line:\n{}'.format(code_line))
-            result_to_complete.append(part_to_keep[0] + REPLACEMENT_TEXT + '\n')
+            result_to_complete.append(part_to_keep[0] + REPLACEMENT_TEXT)
             result_solution.append(code_line)
         else:
             result_solution.append(code_line)
